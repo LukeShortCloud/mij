@@ -14,4 +14,4 @@ sudo docker exec -it mij /bin/bash
 
 ## License
 
-[LGPLv2.1](https://github.com/LukeShortCloud/mij/blob/main/LICENSE)
+[LGPLv3.0](https://github.com/LukeShortCloud/mij/blob/main/LICENSE)
