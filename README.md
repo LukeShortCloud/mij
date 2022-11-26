@@ -12,6 +12,12 @@ sudo docker run --name mij -v "$(pwd):/workdir" -d ekultails/mij:latest
 sudo docker exec -it mij /bin/bash
 ```
 
+```
+cd /workdir
+pip install -r requirements.txt
+pip install -e .
+```
+
 ## License
 
 [LGPLv3.0](https://github.com/LukeShortCloud/mij/blob/main/LICENSE)
