@@ -8,6 +8,7 @@ MIJ provides a highly customizable way to create light shows.
 
 - PyPy 7.3 (Python 3.8 variant)
     - playsound
+    - pyyaml
 - Linux
 
 ## Configurations
