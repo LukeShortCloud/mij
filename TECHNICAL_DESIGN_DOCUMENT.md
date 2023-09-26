@@ -6,9 +6,8 @@ MIJ provides a highly customizable way to create light shows.
 
 ## Technologies
 
-- PyPy 7.3 (Python 3.8 variant)
-    - playsound
-    - pyyaml
+- Rust
+- VLC Media Player
 - Linux
 
 ## Configurations
@@ -148,7 +147,8 @@ Example standard output to the terminal:
 
 ## Roadmap
 
-- 1.0.0 = Basic light show creation.
+- 0.1.0 = Proof-of-concept program made in Python.
+- 1.0.0 = Basic light show creation rewritten in Rust.
 - 2.0.0 = AI/ML integration.
 - 3.0.0 = Smart home integration with Amazon Alexa, Google Home, and [Home Assistant](https://www.home-assistant.io/).
 - 4.0.0 = RESTful API.
