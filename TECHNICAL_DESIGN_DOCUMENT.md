@@ -29,6 +29,12 @@ audio_output_device: "0"
 pins_layout = [8,9,7,0,2,3,12,13]
 # The number of seconds to delay a song from the light show.
 latency = 0.0
+# A list of each light and their characteristics.
+lights:
+  - preview_character: "*"
+    color: "blue"
+  - preview_character: "-"
+    color: "red"
 ```
 
 ### Song
@@ -64,13 +70,13 @@ light_show:
         - String of configuration file path.
     - Output:
         - Array of song configuration settings.
-- preview_lines = Preview a light show from a terminal.
+- lights_preview = Preview a light show from a terminal.
     - Inputs:
         - Character to use for line previews. Default: ``*``.
         - List of strings for colors to use. Default: ``["blue", "cyan", "green", "yellow", "orange", "red", "purple", "pink"]``
     - Outputs:
         - None. This is a void function. Text will be output to the screen.
-- lights_on_via_pins = Turn on lights via physical pins.
+- lights_gpio = Turn on lights via physical GPIO pins.
     - Input:
         - List of integers for pins to turn on.
     - Output:

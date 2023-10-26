@@ -1,0 +1,9 @@
+---
+audio_output_device: "0"
+pins_layout = [8,9,7,0,2,3,12,13]
+latency = 0.0
+lights:
+  - preview_character: "*"
+    color: "blue"
+  - preview_character: "-"
+    color: "red"
