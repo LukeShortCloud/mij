@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_yaml::{self};
+use serde_yml::{self};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct LightsData {
