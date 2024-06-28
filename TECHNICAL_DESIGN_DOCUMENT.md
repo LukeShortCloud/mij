@@ -27,8 +27,8 @@ audio_output_device: "0"
 # A mapping of physical pins to
 # Raspberry Pi 4 example:
 pins_layout = [8,9,7,0,2,3,12,13]
-# The number of seconds to delay a song from the light show.
-latency = 0.0
+# The number of milliseconds to delay a song from the light show.
+latency = 0
 # A list of each light and their characteristics.
 lights:
   - preview_character: "*"
@@ -84,7 +84,7 @@ light_show:
 - play_sound
     - Input:
         - String of path to song file.
-        - Float of seconds to wait before playing the song for latency purposes.
+        - Unsigned integer of milliseconds to wait before playing the song for latency purposes.
     - Output:
         - None.
 
@@ -96,7 +96,7 @@ Example song configuration:
 
 ```
 ---
-interval: "0.5"
+interval: 500
 light_show:
 - [0,1,2,3,4,5,6,7]
 - []
@@ -105,7 +105,7 @@ light_show:
 
 Example standard output to the terminal:
 
-0 seconds:
+0 milliseconds:
 
 ```
 [********]
@@ -118,7 +118,7 @@ Example standard output to the terminal:
 [********]
 ```
 
-0.5 seconds:
+500 milliseconds:
 
 ```
 [        ]
@@ -131,7 +131,7 @@ Example standard output to the terminal:
 [        ]
 ```
 
-1 second:
+1000 milliseconds:
 
 ```
 [********]

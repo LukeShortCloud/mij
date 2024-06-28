@@ -1,10 +1,12 @@
+use std::thread;
+use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use serde_yml::{self};
 
 
 #[derive(Debug, Deserialize, Serialize)]
 struct LightShow {
-    interval: f32,
+    interval: u64,
     light_show: Vec<Vec<i8>>,
 }
 
@@ -61,15 +63,40 @@ impl Default for YamlConfig {
     }
 }
 
-fn lights_preview(all_lights: Vec<LightsData>) {
+fn lights_preview_all_on(all_lights: &Vec<LightsData>) {
     for light in all_lights {
-        let string_of_lights = "********".replace("*", &light.preview_character.to_string());
+        let string_of_lights = "********".replace("*", light.preview_character.to_string().as_str());
         // "\x1b[0m" will reset the color.
-        println!("{}{}\x1b[0m", &light.color, string_of_lights);
+        println!("{}{}\x1b[0m", light.color, string_of_lights);
     }
+    println!("Preview of light colors done.");
+}
+
+fn lights_preview_show(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow) {
+    // Clear the screen.
+    print!("\x1B[2J\x1B[H");
+    for line in &yaml_light_show.light_show {
+        for i in 0..line.len() {
+            if line[i] != 0 {
+                let string_of_lights = "********".replace("*", all_lights[i].preview_character.to_string().as_str());
+                // "\x1b[0m" will reset the color.
+                println!("{}{}\x1b[0m", &all_lights[i].color, string_of_lights);
+            } else {
+                println!(" ");
+            }
+        }
+        thread::sleep(Duration::from_millis(yaml_light_show.interval));
+        print!("\x1B[2J\x1B[H");
+    }
+    println!("Preview of light show done.");
 }
 
 fn main() {
+    let file_light_show = std::fs::File::open("song.yaml").expect("Failed to open file");
+    let yaml_light_show: LightShow = serde_yml::from_reader(file_light_show).expect("Faild to load values");
+    println!("{:?}", yaml_light_show);
     let yaml_config = YamlConfig::default();
-    lights_preview(yaml_config.lights);
+    lights_preview_all_on(&yaml_config.lights);
+    thread::sleep(Duration::from_millis(2000));
+    lights_preview_show(&yaml_config.lights, &yaml_light_show);
 }
