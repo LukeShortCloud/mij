@@ -12,3 +12,22 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+# Music files
+*.aac
+*.aif
+*.aiff
+*.alac
+*.ape
+*.au
+*.flac
+*.m4a
+*.mid
+*.mka
+*.mp3
+*.ogg
+*.pcm
+*.raw
+*.voc
+*.wav
+*.wma
