@@ -6,10 +6,9 @@ MIJ provides a highly customizable way to create light shows.
 
 ## Technologies
 
-- PyPy 7.3 (Python 3.8 variant)
-    - playsound
-    - pyyaml
+- Rust
 - Linux
+- ALSA
 
 ## Configurations
 
@@ -28,8 +27,14 @@ audio_output_device: "0"
 # A mapping of physical pins to
 # Raspberry Pi 4 example:
 pins_layout = [8,9,7,0,2,3,12,13]
-# The number of seconds to delay a song from the light show.
-latency = 0.0
+# The number of milliseconds to delay a song from the light show.
+latency = 0
+# A list of each light and their characteristics.
+lights:
+  - preview_character: "*"
+    color: "blue"
+  - preview_character: "-"
+    color: "red"
 ```
 
 ### Song
@@ -40,6 +45,8 @@ Example:
 
 ```
 ---
+# The music file to play.
+song_file: test.mp3
 # Seconds between each item in the light show.
 interval: "0.5"
 # The light show.
@@ -65,13 +72,13 @@ light_show:
         - String of configuration file path.
     - Output:
         - Array of song configuration settings.
-- preview_lines = Preview a light show from a terminal.
+- lights_preview = Preview a light show from a terminal.
     - Inputs:
         - Character to use for line previews. Default: ``*``.
         - List of strings for colors to use. Default: ``["blue", "cyan", "green", "yellow", "orange", "red", "purple", "pink"]``
     - Outputs:
         - None. This is a void function. Text will be output to the screen.
-- lights_on_via_pins = Turn on lights via physical pins.
+- lights_gpio = Turn on lights via physical GPIO pins.
     - Input:
         - List of integers for pins to turn on.
     - Output:
@@ -79,7 +86,7 @@ light_show:
 - play_sound
     - Input:
         - String of path to song file.
-        - Float of seconds to wait before playing the song for latency purposes.
+        - Unsigned integer of milliseconds to wait before playing the song for latency purposes.
     - Output:
         - None.
 
@@ -91,7 +98,7 @@ Example song configuration:
 
 ```
 ---
-interval: "0.5"
+interval: 500
 light_show:
 - [0,1,2,3,4,5,6,7]
 - []
@@ -100,7 +107,7 @@ light_show:
 
 Example standard output to the terminal:
 
-0 seconds:
+0 milliseconds:
 
 ```
 [********]
@@ -113,7 +120,7 @@ Example standard output to the terminal:
 [********]
 ```
 
-0.5 seconds:
+500 milliseconds:
 
 ```
 [        ]
@@ -126,7 +133,7 @@ Example standard output to the terminal:
 [        ]
 ```
 
-1 second:
+1000 milliseconds:
 
 ```
 [********]
@@ -148,7 +155,8 @@ Example standard output to the terminal:
 
 ## Roadmap
 
-- 1.0.0 = Basic light show creation.
+- 0.1.0 = Proof-of-concept program made in Python.
+- 1.0.0 = Basic light show creation rewritten in Rust.
 - 2.0.0 = AI/ML integration.
 - 3.0.0 = Smart home integration with Amazon Alexa, Google Home, and [Home Assistant](https://www.home-assistant.io/).
 - 4.0.0 = RESTful API.
