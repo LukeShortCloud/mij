@@ -7,8 +7,8 @@ MIJ provides a highly customizable way to create light shows.
 ## Technologies
 
 - Rust
-- VLC Media Player
 - Linux
+- ALSA
 
 ## Configurations
 
@@ -45,6 +45,8 @@ Example:
 
 ```
 ---
+# The music file to play.
+song_file: test.mp3
 # Seconds between each item in the light show.
 interval: "0.5"
 # The light show.

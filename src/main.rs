@@ -1,3 +1,6 @@
+use rodio::{Decoder, OutputStream, Sink};
+use std::fs::File;
+use std::io::BufReader;
 use std::thread;
 use std::time::Duration;
 use serde::{Deserialize, Serialize};
@@ -6,6 +9,7 @@ use serde_yml::{self};
 
 #[derive(Debug, Deserialize, Serialize)]
 struct LightShow {
+    song_file: String,
     interval: u64,
     light_show: Vec<Vec<i8>>,
 }
@@ -75,6 +79,12 @@ fn lights_preview_all_on(all_lights: &Vec<LightsData>) {
 fn lights_preview_show(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow) {
     // Clear the screen.
     print!("\x1B[2J\x1B[H");
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    let audio_sink = Sink::try_new(&stream_handle).unwrap();
+    let song_file = File::open(&yaml_light_show.song_file).unwrap();
+    let audio_source = Decoder::new(BufReader::new(song_file)).unwrap();
+    audio_sink.append(audio_source);
+    audio_sink.play();
     for line in &yaml_light_show.light_show {
         for i in 0..line.len() {
             if line[i] != 0 {
@@ -88,6 +98,7 @@ fn lights_preview_show(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow
         thread::sleep(Duration::from_millis(yaml_light_show.interval));
         print!("\x1B[2J\x1B[H");
     }
+    audio_sink.stop();
     println!("Preview of light show done.");
 }
 
