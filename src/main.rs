@@ -76,7 +76,29 @@ fn lights_preview_all_on(all_lights: &Vec<LightsData>) {
     println!("Preview of light colors done.");
 }
 
-fn lights_preview_show(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow) {
+fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow) -> Vec<String> {
+    let mut cached_lights: Vec<String> = Vec::new();
+    for line in &yaml_light_show.light_show {
+        let mut segment: String = String::new();
+        for i in 0..line.len() {
+            if line[i] != 0 {
+                let string_of_lights = "********".replace('*', all_lights[i].preview_character.to_string().as_str());
+                // "\x1b[0m" will reset the color.
+                if i != line.len() - 1 {
+                    segment = format!("{}{}{}\x1b[0m\n", segment, &all_lights[i].color, string_of_lights);
+                } else {
+                    segment = format!("{}{}{}\x1b[0m", segment, &all_lights[i].color, string_of_lights);
+                }
+            } else if i != line.len() - 1 {
+                segment = format!("{}\n", segment);
+            }
+        }
+        cached_lights.push(segment)
+    }
+    cached_lights
+}
+
+fn lights_preview_show(yaml_light_show: &LightShow, cached_lights: &Vec<String>) {
     // Clear the screen.
     print!("\x1B[2J\x1B[H");
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
@@ -85,21 +107,12 @@ fn lights_preview_show(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow
     let audio_source = Decoder::new(BufReader::new(song_file)).unwrap();
     audio_sink.append(audio_source);
     audio_sink.play();
-    for line in &yaml_light_show.light_show {
-        for i in 0..line.len() {
-            if line[i] != 0 {
-                let string_of_lights = "********".replace('*', all_lights[i].preview_character.to_string().as_str());
-                // "\x1b[0m" will reset the color.
-                println!("{}{}\x1b[0m", &all_lights[i].color, string_of_lights);
-            } else {
-                println!(" ");
-            }
-        }
+    for segment in cached_lights {
+        println!("{}", segment);
         thread::sleep(Duration::from_millis(yaml_light_show.interval));
         print!("\x1B[2J\x1B[H");
     }
     audio_sink.stop();
-    println!("Preview of light show done.");
 }
 
 fn main() {
@@ -109,5 +122,6 @@ fn main() {
     let yaml_config = YamlConfig::default();
     lights_preview_all_on(&yaml_config.lights);
     thread::sleep(Duration::from_millis(2000));
-    lights_preview_show(&yaml_config.lights, &yaml_light_show);
+    let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show);
+    lights_preview_show(&yaml_light_show, &cached_lights);
 }
