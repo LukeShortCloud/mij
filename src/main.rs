@@ -69,7 +69,7 @@ impl Default for YamlConfig {
 
 fn lights_preview_all_on(all_lights: &Vec<LightsData>) {
     for light in all_lights {
-        let string_of_lights = "********".replace("*", light.preview_character.to_string().as_str());
+        let string_of_lights = "********".replace('*', light.preview_character.to_string().as_str());
         // "\x1b[0m" will reset the color.
         println!("{}{}\x1b[0m", light.color, string_of_lights);
     }
@@ -88,7 +88,7 @@ fn lights_preview_show(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow
     for line in &yaml_light_show.light_show {
         for i in 0..line.len() {
             if line[i] != 0 {
-                let string_of_lights = "********".replace("*", all_lights[i].preview_character.to_string().as_str());
+                let string_of_lights = "********".replace('*', all_lights[i].preview_character.to_string().as_str());
                 // "\x1b[0m" will reset the color.
                 println!("{}{}\x1b[0m", &all_lights[i].color, string_of_lights);
             } else {
