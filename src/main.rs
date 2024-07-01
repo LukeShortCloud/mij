@@ -1,4 +1,4 @@
-use rodio::{Decoder, OutputStream, Sink};
+use rodio::{Decoder, OutputStream, Sink, Source};
 use std::fs::File;
 use std::io::BufReader;
 use std::thread;
@@ -98,19 +98,38 @@ fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &Lig
     cached_lights
 }
 
-fn lights_preview_show(yaml_light_show: &LightShow, cached_lights: &Vec<String>) {
+fn lights_preview_show(yaml_light_show: &LightShow, cached_lights: &Vec<String>, skip_ms: &u64) {
     // Clear the screen.
     print!("\x1B[2J\x1B[H");
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let audio_sink = Sink::try_new(&stream_handle).unwrap();
     let song_file = File::open(&yaml_light_show.song_file).unwrap();
     let audio_source = Decoder::new(BufReader::new(song_file)).unwrap();
-    audio_sink.append(audio_source);
-    audio_sink.play();
-    for segment in cached_lights {
-        println!("{}", segment);
-        thread::sleep(Duration::from_millis(yaml_light_show.interval));
-        print!("\x1B[2J\x1B[H");
+    if *skip_ms == 0 {
+        audio_sink.append(audio_source);
+        audio_sink.play();
+        for segment in cached_lights {
+            println!("{}", segment);
+            thread::sleep(Duration::from_millis(yaml_light_show.interval));
+            print!("\x1B[2J\x1B[H");
+        }
+    } else {
+        // If the numbers are not perfectly divisable, the light show timing will be slightly inaccurate.
+        // We round the provided milliseconds down to account for this.
+        let start_interval_u64 = skip_ms / yaml_light_show.interval;
+        let skip_ms_rounded = start_interval_u64 * yaml_light_show.interval;
+        // Indexes only support usize (not u64).
+        let start_interval_usize = start_interval_u64 as usize;
+        // The longer we need to skip, the longer it takes to start the song.
+        // It is still faster in most cases to skip part of the beginning than the listen to it.
+        let skip_song = audio_source.skip_duration(Duration::from_millis(skip_ms_rounded));
+        audio_sink.append(skip_song);
+        audio_sink.play();
+        for segment in &cached_lights[start_interval_usize..] {
+            println!("{}", segment);
+            thread::sleep(Duration::from_millis(yaml_light_show.interval));
+            print!("\x1B[2J\x1B[H");
+        }
     }
     audio_sink.stop();
 }
@@ -123,5 +142,5 @@ fn main() {
     lights_preview_all_on(&yaml_config.lights);
     thread::sleep(Duration::from_millis(2000));
     let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show);
-    lights_preview_show(&yaml_light_show, &cached_lights);
+    lights_preview_show(&yaml_light_show, &cached_lights, &0);
 }
