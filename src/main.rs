@@ -120,10 +120,18 @@ fn lights_preview_show(yaml_light_show: &LightShow, cached_lights: &Vec<String>,
         let skip_ms_rounded = start_interval_u64 * yaml_light_show.interval;
         // Indexes only support usize (not u64).
         let start_interval_usize = start_interval_u64 as usize;
-        // The longer we need to skip, the longer it takes to start the song.
-        // It is still faster in most cases to skip part of the beginning than the listen to it.
-        let skip_song = audio_source.skip_duration(Duration::from_millis(skip_ms_rounded));
-        audio_sink.append(skip_song);
+        let seek_result = audio_sink.try_seek(Duration::from_millis(skip_ms_rounded));
+        match seek_result {
+            Ok(_) => {
+                println!("Seeking succeeded!");
+            }
+            Err(e) => {
+                println!("Seeking failed with the following error: {}", e);
+                println!("Falling back to the slower skip duration method.");
+                let skip_song = audio_source.skip_duration(Duration::from_millis(skip_ms_rounded));
+                audio_sink.append(skip_song);
+            }
+        }
         audio_sink.play();
         for segment in &cached_lights[start_interval_usize..] {
             println!("{}", segment);
