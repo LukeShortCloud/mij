@@ -1,3 +1,4 @@
+use clap::{Arg, Command};
 use rodio::{Decoder, OutputStream, Sink, Source};
 use std::fs::File;
 use std::io::BufReader;
@@ -73,7 +74,6 @@ fn lights_preview_all_on(all_lights: &Vec<LightsData>) {
         // "\x1b[0m" will reset the color.
         println!("{}{}\x1b[0m", light.color, string_of_lights);
     }
-    println!("Preview of light colors done.");
 }
 
 fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow) -> Vec<String> {
@@ -135,12 +135,57 @@ fn lights_preview_show(yaml_light_show: &LightShow, cached_lights: &Vec<String>,
 }
 
 fn main() {
-    let file_light_show = std::fs::File::open("song.yaml").expect("Failed to open file");
+    let matches = Command::new("mij")
+        .version("1.1.0")
+        .author("Luke Short <ekultails@gmail.com>")
+        .about("Make it jingle!")
+        .arg(Arg::new("configuration")
+            .short('c')
+            .long("config")
+            .value_name("FILE")
+            .help("Use the specified MIJ global configuration file"))
+        .arg(Arg::new("lightshow")
+            .short('l')
+            .long("lightshow")
+            .value_name("FILE")
+            .help("Use the specified MIJ light show configuration file")
+            .default_value("song.yaml"))
+        .arg(Arg::new("viewlights")
+            .short('v')
+            .long("viewlights")
+            .num_args(0)
+            .help("View all of the preview lights"))
+        .arg(Arg::new("preview")
+            .short('p')
+            .long("preview")
+            .num_args(0)
+            .help("View a preview of the light show on the CLI"))
+        .arg(Arg::new("skip-to")
+            .short('s')
+            .long("skip-to")
+            .help("Skip the specified number of milliseconds in the preview")
+            .default_value("0"))
+        .get_matches();
+
+    let yaml_config = if matches.contains_id("configuration") {
+        let yaml_config_file_name = &matches.get_one::<String>("configuration").unwrap();
+        let yaml_config_file = std::fs::File::open(yaml_config_file_name).expect("Failed to open file");
+        serde_yml::from_reader(yaml_config_file).expect("Faild to load values")
+    } else {
+        YamlConfig::default()
+    };
+
+    let file_light_show_name = matches.get_one::<String>("lightshow").unwrap();
+    let file_light_show = std::fs::File::open(file_light_show_name).expect("Failed to open file");
     let yaml_light_show: LightShow = serde_yml::from_reader(file_light_show).expect("Faild to load values");
-    println!("{:?}", yaml_light_show);
-    let yaml_config = YamlConfig::default();
-    lights_preview_all_on(&yaml_config.lights);
-    thread::sleep(Duration::from_millis(2000));
-    let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show);
-    lights_preview_show(&yaml_light_show, &cached_lights, &0);
+
+    if *matches.get_one::<bool>("viewlights").unwrap() {
+        lights_preview_all_on(&yaml_config.lights);
+        thread::sleep(Duration::from_millis(2000));
+    }
+    if *matches.get_one::<bool>("preview").unwrap() {
+        let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show);
+        let skip_to: u64 = matches.get_one::<String>("skip-to").unwrap().parse().unwrap();
+        lights_preview_show(&yaml_light_show, &cached_lights, &skip_to);
+    }
 }
