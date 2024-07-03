@@ -1,9 +1,29 @@
 ---
-audio_output_device: "0"
-pins_layout = [8,9,7,0,2,3,12,13]
-latency = 0.0
+audio_output_device: 0
+pins_layout: [8,9,7,0,2,3,12,13]
+latency: 0.0
 lights:
-  - preview_character: "*"
-    color: "blue"
-  - preview_character: "-"
-    color: "red"
+  # Red.
+  - color: "\x1b[38;5;196m"
+    preview_character: "*"
+  # Orange.
+  - color: "\x1b[38;5;208m"
+    preview_character: "*"
+  # Yellow.
+  - color: "\x1b[38;5;226m"
+    preview_character: "*"
+  # Green.
+  - color: "\x1b[38;5;46m"
+    preview_character: "*"
+  # Cyan.
+  - color: "\x1b[38;5;51m"
+    preview_character: "*"
+  # Blue.
+  - color: "\x1b[38;5;21m"
+    preview_character: "*"
+  # Purple.
+  - color: "\x1b[38;5;93m"
+    preview_character: "*"
+  # Magenta.
+  - color: "\x1b[38;5;201m"
+    preview_character: "*"
