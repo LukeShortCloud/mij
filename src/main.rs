@@ -1,7 +1,9 @@
-use clap::{Arg, Command};
+use clap;
 use rodio::{Decoder, OutputStream, Sink, Source};
+use std::process::Command;
 use std::fs::File;
 use std::io::BufReader;
+use std::str::FromStr;
 use std::thread;
 use std::time::Duration;
 use serde::{Deserialize, Serialize};
@@ -76,13 +78,31 @@ fn lights_preview_all_on(all_lights: &Vec<LightsData>) {
     }
 }
 
-fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow) -> Vec<String> {
+fn find_light_width(light_width_requested: usize) -> usize {
+    if light_width_requested > 0 {
+        return light_width_requested
+    }
+
+    // This outputs both the length and width of a terminal. We only need the width.
+    // "stty size" works more reliably than "tput cols".
+    let cmd_stty = Command::new("sh").arg("-c").arg("stty size < /dev/tty").output();
+    if cmd_stty.as_ref().unwrap().status.success() {
+        let cmd_stty_string: String = String::from_utf8(cmd_stty.unwrap().stdout).unwrap();
+        let cmd_stty_vec: Vec<&str> = cmd_stty_string.trim().split_whitespace().collect();
+        usize::from_str(cmd_stty_vec[1]).unwrap()
+    } else {
+        // Default to 8 if the command fails.
+        return 8
+    }
+}
+
+fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow, light_width: &usize) -> Vec<String> {
     let mut cached_lights: Vec<String> = Vec::new();
     for line in &yaml_light_show.light_show {
         let mut segment: String = String::new();
         for i in 0..line.len() {
             if line[i] != 0 {
-                let string_of_lights = "********".replace('*', all_lights[i].preview_character.to_string().as_str());
+                let string_of_lights = "*".repeat(*light_width as usize).replace('*', all_lights[i].preview_character.to_string().as_str());
                 // "\x1b[0m" will reset the color.
                 if i != line.len() - 1 {
                     segment = format!("{}{}{}\x1b[0m\n", segment, &all_lights[i].color, string_of_lights);
@@ -135,32 +155,37 @@ fn lights_preview_show(yaml_light_show: &LightShow, cached_lights: &Vec<String>,
 }
 
 fn main() {
-    let matches = Command::new("mij")
+    let matches = clap::Command::new("mij")
         .version("1.1.0")
         .author("Luke Short <ekultails@gmail.com>")
         .about("Make it jingle!")
-        .arg(Arg::new("configuration")
+        .arg(clap::Arg::new("configuration")
             .short('c')
             .long("config")
             .value_name("FILE")
             .help("Use the specified MIJ global configuration file"))
-        .arg(Arg::new("lightshow")
+        .arg(clap::Arg::new("lightshow")
             .short('l')
             .long("lightshow")
             .value_name("FILE")
             .help("Use the specified MIJ light show configuration file")
             .default_value("song.yaml"))
-        .arg(Arg::new("viewlights")
+        .arg(clap::Arg::new("viewlights")
             .short('v')
             .long("viewlights")
             .num_args(0)
             .help("View all of the preview lights"))
-        .arg(Arg::new("preview")
+        .arg(clap::Arg::new("preview")
             .short('p')
             .long("preview")
             .num_args(0)
             .help("View a preview of the light show on the CLI"))
-        .arg(Arg::new("skip-to")
+        .arg(clap::Arg::new("light-width")
+            .short('w')
+            .long("light-width")
+            .help("Configure the width of all lights for the preview (use 0 for automatic detection)")
+            .default_value("0"))
+        .arg(clap::Arg::new("skip-to")
             .short('s')
             .long("skip-to")
             .help("Skip the specified number of milliseconds in the preview")
@@ -183,8 +208,9 @@ fn main() {
         lights_preview_all_on(&yaml_config.lights);
         thread::sleep(Duration::from_millis(2000));
     }
+    let light_width = find_light_width(usize::from_str(matches.get_one::<String>("light-width").unwrap()).unwrap());
     if *matches.get_one::<bool>("preview").unwrap() {
-        let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show);
+        let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show, &light_width);
         let skip_to: u64 = matches.get_one::<String>("skip-to").unwrap().parse().unwrap();
         lights_preview_show(&yaml_light_show, &cached_lights, &skip_to);
     }
