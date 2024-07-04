@@ -60,6 +60,12 @@ Use the specified configuration file instead of the built-in defaults.
 $ mij --config config.yaml --viewlights
 ```
 
+In the configuration file, set "ascii_art" to the path of an ASCII art text file. Then use that for the light show preview.
+
+```
+$ mij --config config.yaml --preview
+```
+
 View all available CLI arugments.
 
 ```

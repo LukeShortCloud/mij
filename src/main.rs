@@ -1,14 +1,14 @@
 use clap;
 use rodio::{Decoder, OutputStream, Sink, Source};
 use std::process::Command;
-use std::fs::File;
+use std::fs::{File, read_to_string};
 use std::io::BufReader;
+use std::path::Path;
 use std::str::FromStr;
 use std::thread;
 use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use serde_yml::{self};
-
 
 #[derive(Debug, Deserialize, Serialize)]
 struct LightShow {
@@ -31,6 +31,7 @@ struct YamlConfig {
     pins_layout: Vec<i8>,
     latency: f32,
     lights: Vec<LightsData>,
+    ascii_art: String,
 }
 
 impl Default for LightsData {
@@ -65,7 +66,8 @@ impl Default for YamlConfig {
                 LightsData {preview_character: '*', color: String::from("\x1b[38;5;93m")},
                 // Magenta.
                 LightsData {preview_character: '*', color: String::from("\x1b[38;5;201m")},
-            ]
+            ],
+            ascii_art: "".to_string()
         }
     }
 }
@@ -96,26 +98,43 @@ fn find_light_width(light_width_requested: usize) -> usize {
     }
 }
 
-fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow, light_width: &usize) -> Vec<String> {
+fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow, ascii_art: &String, light_width: &usize) -> Vec<String> {
     let mut cached_lights: Vec<String> = Vec::new();
-    for line in &yaml_light_show.light_show {
-        let mut segment: String = String::new();
-        for i in 0..line.len() {
-            if line[i] != 0 {
-                let string_of_lights = "*".repeat(*light_width as usize).replace('*', all_lights[i].preview_character.to_string().as_str());
-                // "\x1b[0m" will reset the color.
-                if i != line.len() - 1 {
-                    segment = format!("{}{}{}\x1b[0m\n", segment, &all_lights[i].color, string_of_lights);
-                } else {
-                    segment = format!("{}{}{}\x1b[0m", segment, &all_lights[i].color, string_of_lights);
+
+    if ! ascii_art.is_empty() {
+        let ascii_art_path = Path::new(ascii_art);
+        let ascii_art_string = read_to_string(ascii_art_path).unwrap();
+        for line in &yaml_light_show.light_show {
+            let mut segment: String = ascii_art_string.clone();
+            for i in 0..line.len() {
+                if line[i] != 0 {
+                    // "\x1b[0m" will reset the color.
+                    segment = segment.replace(&all_lights[i].preview_character.to_string().as_str(), &format!("\x1b[0m{}{}\x1b[0m", &all_lights[i].color, &all_lights[i].preview_character.to_string().as_str()));
                 }
-            } else if i != line.len() - 1 {
-                segment = format!("{}\n", segment);
             }
+            cached_lights.push(segment.to_string())
         }
-        cached_lights.push(segment)
+        cached_lights
+    } else {
+        for line in &yaml_light_show.light_show {
+            let mut segment: String = String::new();
+            for i in 0..line.len() {
+                if line[i] != 0 {
+                    let string_of_lights = "*".repeat(*light_width as usize).replace('*', all_lights[i].preview_character.to_string().as_str());
+                    // "\x1b[0m" will reset the color.
+                    if i != line.len() - 1 {
+                        segment = format!("{}{}{}\x1b[0m\n", segment, &all_lights[i].color, string_of_lights);
+                    } else {
+                        segment = format!("{}{}{}\x1b[0m", segment, &all_lights[i].color, string_of_lights);
+                    }
+                } else if i != line.len() - 1 {
+                    segment = format!("{}\n", segment);
+                }
+            }
+            cached_lights.push(segment)
+        }
+        cached_lights
     }
-    cached_lights
 }
 
 fn lights_preview_show(yaml_light_show: &LightShow, cached_lights: &Vec<String>, skip_ms: &u64) {
@@ -179,11 +198,11 @@ fn main() {
             .short('p')
             .long("preview")
             .num_args(0)
-            .help("View a preview of the light show on the CLI"))
+            .help("View a preview of the light show using lines or ASCII art on the CLI"))
         .arg(clap::Arg::new("light-width")
             .short('w')
             .long("light-width")
-            .help("Configure the width of all lights for the preview (use 0 for automatic detection)")
+            .help("Configure the width of all lights for the lines preview (use 0 for automatic detection)")
             .default_value("0"))
         .arg(clap::Arg::new("skip-to")
             .short('s')
@@ -210,7 +229,7 @@ fn main() {
     }
     let light_width = find_light_width(usize::from_str(matches.get_one::<String>("light-width").unwrap()).unwrap());
     if *matches.get_one::<bool>("preview").unwrap() {
-        let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show, &light_width);
+        let cached_lights = lights_preview_show_cache(&yaml_config.lights, &yaml_light_show, &yaml_config.ascii_art, &light_width);
         let skip_to: u64 = matches.get_one::<String>("skip-to").unwrap().parse().unwrap();
         lights_preview_show(&yaml_light_show, &cached_lights, &skip_to);
     }

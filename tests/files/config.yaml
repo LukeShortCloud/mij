@@ -27,3 +27,4 @@ lights:
   # Magenta.
   - color: "\x1b[38;5;201m"
     preview_character: "*"
+ascii_art: ""
