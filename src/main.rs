@@ -1,4 +1,3 @@
-use clap;
 use rodio::{Decoder, OutputStream, Sink, Source};
 use std::process::Command;
 use std::fs::{File, read_to_string};
@@ -90,15 +89,15 @@ fn find_light_width(light_width_requested: usize) -> usize {
     let cmd_stty = Command::new("sh").arg("-c").arg("stty size < /dev/tty").output();
     if cmd_stty.as_ref().unwrap().status.success() {
         let cmd_stty_string: String = String::from_utf8(cmd_stty.unwrap().stdout).unwrap();
-        let cmd_stty_vec: Vec<&str> = cmd_stty_string.trim().split_whitespace().collect();
+        let cmd_stty_vec: Vec<&str> = cmd_stty_string.split_whitespace().collect();
         usize::from_str(cmd_stty_vec[1]).unwrap()
     } else {
         // Default to 8 if the command fails.
-        return 8
+        8
     }
 }
 
-fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &LightShow, ascii_art: &String, light_width: &usize) -> Vec<String> {
+fn lights_preview_show_cache(all_lights: &[LightsData], yaml_light_show: &LightShow, ascii_art: &String, light_width: &usize) -> Vec<String> {
     let mut cached_lights: Vec<String> = Vec::new();
 
     if ! ascii_art.is_empty() {
@@ -109,7 +108,7 @@ fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &Lig
             for i in 0..line.len() {
                 if line[i] != 0 {
                     // "\x1b[0m" will reset the color.
-                    segment = segment.replace(&all_lights[i].preview_character.to_string().as_str(), &format!("\x1b[0m{}{}\x1b[0m", &all_lights[i].color, &all_lights[i].preview_character.to_string().as_str()));
+                    segment = segment.replace(all_lights[i].preview_character.to_string().as_str(), &format!("\x1b[0m{}{}\x1b[0m", &all_lights[i].color, &all_lights[i].preview_character.to_string().as_str()));
                 }
             }
             cached_lights.push(segment.to_string())
@@ -120,7 +119,7 @@ fn lights_preview_show_cache(all_lights: &Vec<LightsData>, yaml_light_show: &Lig
             let mut segment: String = String::new();
             for i in 0..line.len() {
                 if line[i] != 0 {
-                    let string_of_lights = "*".repeat(*light_width as usize).replace('*', all_lights[i].preview_character.to_string().as_str());
+                    let string_of_lights = "*".repeat(*light_width).replace('*', all_lights[i].preview_character.to_string().as_str());
                     // "\x1b[0m" will reset the color.
                     if i != line.len() - 1 {
                         segment = format!("{}{}{}\x1b[0m\n", segment, &all_lights[i].color, string_of_lights);
