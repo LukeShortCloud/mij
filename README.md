@@ -14,6 +14,21 @@ sudo docker run --name mij -v "$(pwd):/workdir" -d ekultails/mij:latest
 sudo docker exec -it mij /bin/bash
 ```
 
+If not using the container, install the required ALSA audio library files manually:
+
+- Arch Linux
+    ```
+    sudo pacman -S alsa-lib
+    ```
+- Debian
+    ```
+    sudo apt-get install libasound2-dev
+    ```
+- Fedora
+    ```
+    sudo dnf install alsa-lib-devel
+    ```
+
 ## Usage
 
 Copy the example light show configuration and change the "song_file" to use a real music file.
